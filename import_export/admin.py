@@ -31,6 +31,25 @@ except ImportError:
     from django.utils.encoding import force_unicode as force_text
 
 
+import chardet
+def convertEncoding(from_encode, filepath):
+    oldFile = open(filepath, 'r')
+    current_encode=chardet.detect(oldFile.read())['encoding']
+    oldFile.close()
+
+    oldFile = file(filepath)
+    content2 = []
+    while True:
+        line = oldFile.readline()
+        content2.append(line.decode(current_encode).encode(from_encode))
+        if len(line) == 0:
+            break
+
+    oldFile.close()
+    NewFile=file(filepath,'w')
+    NewFile.writelines(content2)
+    NewFile.close()
+
 #: import / export formats
 DEFAULT_FORMATS = (
     base_formats.CSV,
@@ -109,11 +128,12 @@ class ImportMixin(object):
                 tempfile.gettempdir(),
                 confirm_form.cleaned_data['import_file_name']
             )
+            #convert code
+            convertEncoding(self.from_encoding,import_file_name)
             import_file = open(import_file_name, input_format.get_read_mode())
             data = import_file.read()
             # if not input_format.is_binary() and self.from_encoding:
             #     data = force_text(data, 'self.from_encoding')
-            data = force_text(data, 'utf-8')
             dataset = input_format.create_dataset(data)
 
             result = resource.import_data(dataset, dry_run=False,
@@ -171,7 +191,8 @@ class ImportMixin(object):
             with tempfile.NamedTemporaryFile(delete=False) as uploaded_file:
                 for chunk in import_file.chunks():
                     uploaded_file.write(chunk)
-
+            #convert code
+            convertEncoding(self.from_encoding,uploaded_file.name)
             # then read the file, using the proper format-specific mode
             with open(uploaded_file.name,
                       input_format.get_read_mode()) as uploaded_import_file:
@@ -179,7 +200,6 @@ class ImportMixin(object):
                 data = uploaded_import_file.read()
                 # if not input_format.is_binary() and self.from_encoding:
                 #     data = force_text(data, self.from_encoding)
-                data = force_text(data, 'utf-8')
                 dataset = input_format.create_dataset(data)
                 result = resource.import_data(dataset, dry_run=True,
                                               raise_errors=False)
