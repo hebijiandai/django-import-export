@@ -111,8 +111,9 @@ class ImportMixin(object):
             )
             import_file = open(import_file_name, input_format.get_read_mode())
             data = import_file.read()
-            if not input_format.is_binary() and self.from_encoding:
-                data = force_text(data, self.from_encoding)
+            # if not input_format.is_binary() and self.from_encoding:
+            #     data = force_text(data, 'self.from_encoding')
+            data = force_text(data, 'utf-8')
             dataset = input_format.create_dataset(data)
 
             result = resource.import_data(dataset, dry_run=False,
@@ -176,8 +177,9 @@ class ImportMixin(object):
                       input_format.get_read_mode()) as uploaded_import_file:
                 # warning, big files may exceed memory
                 data = uploaded_import_file.read()
-                if not input_format.is_binary() and self.from_encoding:
-                    data = force_text(data, self.from_encoding)
+                # if not input_format.is_binary() and self.from_encoding:
+                #     data = force_text(data, self.from_encoding)
+                data = force_text(data, 'utf-8')
                 dataset = input_format.create_dataset(data)
                 result = resource.import_data(dataset, dry_run=True,
                                               raise_errors=False)
